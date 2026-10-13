@@ -1,0 +1,75 @@
+services:
+  vault:
+    image: hashicorp/vault:1.19
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    command: server -dev
+    ports:
+      - "8200:8200"
+    healthcheck:
+      test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status >/dev/null 2>&1"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  vault-init:
+    image: hashicorp/vault:1.19
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-only-token
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        vault kv put secret/gateway \
+          backend_shared_secret=demo-backend-secret \
+          auth_introspection_secret=demo-auth-secret
+
+  auth:
+    build: .
+    command: uvicorn auth_service.main:app --host 0.0.0.0 --port 8100
+    depends_on:
+      vault-init:
+        condition: service_completed_successfully
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-only-token
+    ports:
+      - "8100:8100"
+
+  backend:
+    build: .
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 9000
+    depends_on:
+      vault-init:
+        condition: service_completed_successfully
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-only-token
+    ports:
+      - "9000:9000"
+
+  gateway:
+    build: .
+    volumes:
+      - ./frontend:/app/frontend:ro
+    command: uvicorn api_gateway.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      auth:
+        condition: service_started
+      backend:
+        condition: service_started
+      vault-init:
+        condition: service_completed_successfully
+    environment:
+      AUTH_URL: http://auth:8100
+      BACKEND_URL: http://backend:9000
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-only-token
+    ports:
+      - "8000:8000"

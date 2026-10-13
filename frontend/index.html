@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NODO LAB · Frontend ↔ API Gateway ↔ Backend</title>
+  <link rel="stylesheet" href="/static/estilos.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <div class="layout">
+    <header class="header">
+      <a href="/" class="brand" aria-label="NODO LAB inicio">
+        <span class="brand-icon">N<span class="brand-mark">✳</span></span>
+        <span class="brand-name">NODO<span class="brand-light">/ LAB</span></span>
+      </a>
+      <div class="header-right">
+        <span class="header-route"><span class="dot cyan"></span> <span>Frontend</span> <span class="arrow">→</span> Gateway <span class="arrow">→</span> API</span>
+        <span id="sesion-badge" class="badge" aria-live="polite"><span class="dot"></span> SIN SESIÓN</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-number">01 /</span> LABORATORIO DE INTEGRACIÓN</div>
+        <div class="hero-grid">
+          <div>
+            <h1>Un Frontend atractivo.<br><em>Una API protegida.</em></h1>
+            <p>Conecta el formulario de login con FastAPI, usa una sesión segura y comprueba quién puede consultar o modificar los datos.</p>
+            <div class="tags">
+              <span><i class="tag-dot"></i> HTML + JavaScript</span>
+              <span><i class="tag-dot purple"></i> FastAPI</span>
+              <span><i class="tag-dot pink"></i> Auth Service</span>
+            </div>
+          </div>
+          <div class="flow-card" aria-label="Flujo de autenticación">
+            <div class="flow-row"><span class="flow-num">01</span><div><strong>Frontend</strong><small>Formulario y fetch()</small></div><span class="flow-icon">◉</span></div>
+            <div class="flow-line"></div>
+            <div class="flow-row"><span class="flow-num">02</span><div><strong>API Gateway</strong><small>Cookie · introspección · roles</small></div><span class="flow-icon">⇄</span></div>
+            <div class="flow-line"></div>
+            <div class="flow-row"><span class="flow-num">03</span><div><strong>Backend</strong><small>Responde productos y órdenes</small></div><span class="flow-icon">⬡</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="top-grid">
+        <article class="card login-card">
+          <div class="card-head"><div><span class="card-overline">PASO A</span><h2>Iniciar sesión</h2></div><span class="card-symbol">↗</span></div>
+          <p class="card-description">El Frontend envía credenciales al Gateway mediante <code>POST /auth/login</code>.</p>
+          <form id="login-form">
+            <label for="username">Usuario</label>
+            <div class="input-wrap"><span>◉</span><input id="username" name="username" value="ana" autocomplete="username" required placeholder="Tu usuario"></div>
+            <label for="password">Contraseña</label>
+            <div class="input-wrap"><span>⌁</span><input id="password" name="password" type="password" value="1234" autocomplete="current-password" required placeholder="Tu contraseña"></div>
+            <button class="btn primary wide" type="submit">Entrar al sistema <span>→</span></button>
+          </form>
+          <div class="demo-box"><span class="demo-title">USUARIOS DE PRUEBA</span>
+            <div class="demo-users">
+              <button type="button" class="demo-user" data-username="ana" data-password="1234">Ana <small>user</small></button>
+              <button type="button" class="demo-user" data-username="ernesto" data-password="admin123">Ernesto <small>admin</small></button>
+            </div>
+            <small class="demo-note">Selecciona uno para completar el formulario.</small>
+          </div>
+        </article>
+
+        <article class="card session-card">
+          <div class="card-head"><div><span class="card-overline">PASO B</span><h2>Estado de la sesión</h2></div><span class="card-symbol">◎</span></div>
+          <p class="card-description">La identidad es consultada a través de <code>GET /auth/me</code>.</p>
+          <div class="identity-panel">
+            <div class="avatar" id="avatar">?</div>
+            <div class="identity-copy"><small>IDENTIDAD ACTUAL</small><strong id="perfil-nombre">Visitante</strong><span id="perfil-detalle">Aún no autenticado</span></div>
+          </div>
+          <div class="session-notes">
+            <div><span>TIPO DE COOKIE</span><strong>HttpOnly</strong></div>
+            <div><span>SESIÓN</span><strong id="perfil-estado">Desconectada</strong></div>
+          </div>
+          <div class="button-row">
+            <button class="btn ghost" id="btn-me" type="button">Ver mi sesión</button>
+            <button class="btn outline" id="btn-logout" type="button">Cerrar sesión</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="card inventory-card">
+          <div class="card-head"><div><span class="card-overline">PASO C</span><h2>Inventario protegido</h2></div><span class="counter" id="contador-productos">— productos</span></div>
+          <p class="card-description">La API devuelve productos solo si la sesión es válida. Borrar requiere rol <code>admin</code>.</p>
+          <button id="btn-products" class="btn secondary" type="button">Consultar productos <span>↗</span></button>
+          <div id="productos" class="product-list">
+            <div class="empty"><span class="empty-icon">▣</span><strong>Esperando conexión</strong><small>Una vez conectado, aquí aparecerán los productos reales del Backend.</small></div>
+          </div>
+        </article>
+        <article class="card orders-card">
+          <div class="card-head"><div><span class="card-overline">PASO D</span><h2>Órdenes</h2></div><span class="card-symbol">≡</span></div>
+          <p class="card-description">Prueba la ruta <code>GET /api/orders</code> y observa el resultado HTTP.</p>
+          <button id="btn-orders" class="btn secondary" type="button">Consultar órdenes <span>↗</span></button>
+          <div id="ordenes" class="orders"><div class="empty"><span class="empty-icon">☷</span><strong>Sin órdenes cargadas</strong><small>Inicia sesión para solicitar órdenes.</small></div></div>
+        </article>
+      </section>
+
+      <section class="card console-card">
+        <div class="console-top"><div><span class="card-overline">OBSERVAR LA RED</span><h2>Consola de solicitudes</h2></div><div class="console-indicator"><span class="dot cyan"></span> RESPUESTAS HTTP</div></div>
+        <div class="console-panel"><div class="console-bar"><span></span><span></span><span></span><strong>network.log</strong></div><pre id="resultado" aria-live="polite">// Frontend listo. Falta conectar /static/conexion.js
+// Abre F12 → Network → Fetch/XHR</pre></div>
+        <p id="mensaje" class="message" aria-live="polite">Frontend y Backend preparados. Conecta las peticiones para habilitar el laboratorio.</p>
+      </section>
+      <footer><span>NODO / LAB</span><span>Demo local · No apto para producción · Cookies HttpOnly</span></footer>
+    </main>
+  </div>
+  <script src="/static/interfaz.js"></script>
+  <script src="/static/conexion.js"></script>
+</body>
+</html>
