@@ -12,6 +12,9 @@ Esta carpeta está **completa salvo la conexión de JavaScript**. El diseño, lo
 
 ### Credenciales de demostración
 
+
+
+AAA
 - `ana / 1234` → rol `user`
 - `ernesto / admin123` → roles `user`, `admin`
 
